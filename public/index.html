@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda Virtual</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Tienda Virtual</h1>
+
+        <!-- Selección de producto -->
+        <label for="producto">Producto</label>
+        <select id="producto"></select>
+
+        <label for="talla">Talla</label>
+        <select id="talla"></select>
+
+        <label for="cantidad">Cantidad</label>
+        <select id="cantidad"></select>
+
+        <button id="agregar">Agregar al carrito</button>
+
+        <!-- Carrito de compras -->
+        <h2>Carrito</h2>
+        <table id="productosTabla">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Talla</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <h3>Total: $<span id="total">0.00</span></h3>
+
+        <button id="imprimirTicket">Imprimir Ticket</button>
+
+        <!-- Ticket de impresión -->
+        <div id="ticketImpresion" style="visibility: hidden;">
+            <h3>Ticket de Compra</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Talla</th>
+                        <th>Precio Unitario</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketTabla"></tbody>
+            </table>
+            <h3>Total: $<span id="ticketTotal"></span></h3>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

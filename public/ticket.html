@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket de Compra</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #5a5a5a;
+        }
+        .ticket {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 600px;
+            margin: 0 auto;
+        }
+        .ticket select, .ticket button, .ticket input {
+            padding: 10px;
+            width: 100%;
+            margin: 10px 0;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .ticket button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+        .ticket button:hover {
+            background-color: #45a049;
+        }
+        .precio {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .producto {
+            display: flex;
+            justify-content: space-between;
+        }
+        .producto p {
+            margin: 0;
+        }
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: right;
+        }
+        .cantidad {
+            width: 50%;
+            margin: 0;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="ticket">
+        <h1>Ticket de Compra</h1>
+
+        <!-- Selección de producto -->
+        <label for="producto">Selecciona un producto:</label>
+        <select id="producto">
+            <option value="">Seleccionar</option>
+        </select>
+
+        <!-- Selección de talla -->
+        <label for="talla">Selecciona una talla:</label>
+        <select id="talla">
+            <option value="">Seleccionar</option>
+        </select>
+
+        <!-- Selección de cantidad -->
+        <label for="cantidad">Cantidad:</label>
+        <input type="number" id="cantidad" class="cantidad" min="1" max="100" value="1" />
+
+        <div class="producto">
+            <p>Precio:</p>
+            <p class="precio" id="precio">$0</p>
+        </div>
+
+        <button id="agregarProducto">Agregar Producto</button>
+        <button id="eliminarProducto">Eliminar Producto</button>
+
+        <h3>Productos seleccionados</h3>
+        <table id="productosSeleccionados">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Talla</th>
+                    <th>Precio Unitario</th>
+                    <th>Cantidad</th>
+                    <th>Precio Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Productos seleccionados aparecerán aquí -->
+            </tbody>
+        </table>
+
+        <p class="total" id="total">Total: $0</p>
+        <button id="imprimirTicket">Imprimir Ticket</button>
+    </div>
+
+    <script>
+        let productosEnTicket = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const productoSelect = document.getElementById('producto');
+            const tallaSelect = document.getElementById('talla');
+            const cantidadInput = document.getElementById('cantidad');
+            const precioElement = document.getElementById('precio');
+            const agregarProductoBtn = document.getElementById('agregarProducto');
+            const eliminarProductoBtn = document.getElementById('eliminarProducto');
+            const productosSeleccionadosTable = document.getElementById('productosSeleccionados').getElementsByTagName('tbody')[0];
+            const totalElement = document.getElementById('total');
+            const imprimirTicketBtn = document.getElementById('imprimirTicket');
+
+            // Cargar los productos
+            fetch('/api/productos')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(categoria => {
+                        const option = document.createElement('option');
+                        option.value = categoria;
+                        option.textContent = categoria;
+                        productoSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error al cargar los productos:', error));
+
+            // Cuando se selecciona un producto
+            productoSelect.addEventListener('change', function() {
+                const categoria = productoSelect.value;
+                if (categoria) {
+                    fetch(`/api/detalles?categoria=${categoria}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            tallaSelect.innerHTML = '<option value="">Seleccionar</option>';
+                            data.forEach(item => {
+                                const option = document.createElement('option');
+                                option.value = item.talla;
+                                option.textContent = `Talla ${item.talla} - $${item.precio.toFixed(2)}`;
+                                tallaSelect.appendChild(option);
+                            });
+                        })
+                        .catch(error => console.error('Error al cargar las tallas:', error));
+                }
+            });
+
+            // Cuando se selecciona una talla
+            tallaSelect.addEventListener('change', function() {
+                const categoria = productoSelect.value;
+                const talla = tallaSelect.value;
+
+                if (categoria && talla) {
+                    fetch(`/api/detalles?categoria=${categoria}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const producto = data.find(item => item.talla == talla);
+                            if (producto) {
+                                precioElement.textContent = `$${producto.precio.toFixed(2)}`;
+                            }
+                        });
+                }
+            });
+
+            // Agregar producto al ticket
+            agregarProductoBtn.addEventListener('click', function() {
+                const categoria = productoSelect.value;
+                const talla = tallaSelect.value;
+                const cantidad = parseInt(cantidadInput.value);
+
+                if (categoria && talla && cantidad) {
+                    fetch(`/api/detalles?categoria=${categoria}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const producto = data.find(item => item.talla == talla);
+                            if (producto) {
+                                productosEnTicket.push({ nombre: categoria, talla: talla, precio: producto.precio, cantidad: cantidad });
+                                renderProductosSeleccionados();
+                            }
+                        });
+                }
+            });
+
+            // Eliminar producto del ticket
+            eliminarProductoBtn.addEventListener('click', function() {
+                productosEnTicket.pop();
+                renderProductosSeleccionados();
+            });
+
+            // Función para renderizar los productos seleccionados
+            function renderProductosSeleccionados() {
+                productosSeleccionadosTable.innerHTML = '';
+                let total = 0;
+                productosEnTicket.forEach((item, index) => {
+                    const row = productosSeleccionadosTable.insertRow();
+                    const precioTotal = (item.precio * item.cantidad).toFixed(2);
+
+                    row.innerHTML = `
+                        <td>${item.nombre}</td>
+                        <td>${item.talla}</td>
+                        <td>$${item.precio.toFixed(2)}</td>
+                        <td>${item.cantidad}</td>
+                        <td>$${precioTotal}</td>
+                    `;
+                    total += item.precio * item.cantidad;
+                });
+                totalElement.textContent = `Total: $${total.toFixed(2)}`;
+            }
+
+            // Imprimir ticket
+            imprimirTicketBtn.addEventListener('click', function() {
+                window.print();
+            });
+        });
+    </script>
+</body>
+</html>
